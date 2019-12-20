@@ -8,7 +8,7 @@ public class AsIntStream implements IntStream {
     private AsIntStream finale;
     private ArrayList<Object> operations = new ArrayList<>();
     private static boolean terminalUsed = false;
-    public int[] stream;
+    private int[] stream;
 
     private AsIntStream(int... arg) {
         stream = arg;
@@ -161,7 +161,7 @@ public class AsIntStream implements IntStream {
         return run().stream;
     }
 
-    public AsIntStream run() {
+    private AsIntStream run() {
         terminalUsed = true;
         for (Object item : operations) {
             if (item instanceof IntPredicate) {
