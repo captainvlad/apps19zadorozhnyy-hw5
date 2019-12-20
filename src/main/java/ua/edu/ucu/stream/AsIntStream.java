@@ -7,10 +7,10 @@ public class AsIntStream implements IntStream {
 
     private AsIntStream finale;
     private ArrayList<Object> operations = new ArrayList<>();
-    private boolean TerminalUsed = false;
+    private boolean terminalUsed = false;
     private int[] stream;
 
-    private AsIntStream(int... arg){
+    private AsIntStream(int... arg) {
         stream = arg;
     }
 
@@ -19,8 +19,8 @@ public class AsIntStream implements IntStream {
         return new AsIntStream(values);
     }
 
-    private void CheckEmpty(){
-        if (count() == 0){
+    private void checkEmpty() {
+        if (count() == 0) {
             throw new IllegalArgumentException("Empty stream");
         }
     }
@@ -33,23 +33,27 @@ public class AsIntStream implements IntStream {
 
     @Override
     public Integer max() {
-        CheckEmpty();
+        checkEmpty();
         finale = run();
         Integer max = finale.toArray()[0];
         for (int item: finale.toArray()) {
-            max = item > max ? item: max;
+            if (item > max) {
+                max = item;
+            }
         }
         return max;
     }
 
     @Override
     public Integer min() {
-        CheckEmpty();
+        checkEmpty();
 
         finale = run();
         Integer min = finale.toArray()[0];
         for (int item: finale.toArray()) {
-            min = item < min ? item: min;
+            if(item < min) {
+                min = item;
+            }
         }
         return min;
     }
@@ -61,7 +65,7 @@ public class AsIntStream implements IntStream {
 
     @Override
     public Integer sum() {
-        CheckEmpty();
+        checkEmpty();
         Integer sum = 0;
 
         for (int item: run().stream) {
@@ -73,19 +77,21 @@ public class AsIntStream implements IntStream {
 
     @Override
     public IntStream filter(IntPredicate predicate) {
-        if (!TerminalUsed) {
+        if (!terminalUsed) {
             operations.add(predicate);
             return this;
         }
         int k = 0;
         int p = 0;
         for (int item: stream) {
-            k = predicate.test(item) ? k + 1 : k;
+            if (predicate.test(item)) {
+                k += 1;
+            }
         }
         int[] result = new int[k];
 
         for (int item: stream) {
-            if (predicate.test(item)){
+            if (predicate.test(item)) {
                 result[p] = item;
                 p += 1;
             }
@@ -103,37 +109,37 @@ public class AsIntStream implements IntStream {
 
     @Override
     public IntStream map(IntUnaryOperator mapper) {
-        if( !TerminalUsed ){
+        if(!terminalUsed) {
             operations.add(mapper);
             return this;
         }
-        int[] new_stream = stream.clone();
-        for (int i = 0; i < new_stream.length; i++) {
-            new_stream[i] = mapper.apply(new_stream[i]);
+        int[] newStream = stream.clone();
+        for (int i = 0; i < newStream.length; i++) {
+            newStream[i] = mapper.apply(newStream[i]);
         }
-        stream = new_stream;
-        return of(new_stream);
+        stream = newStream;
+        return of(newStream);
     }
 
     @Override
     public IntStream flatMap(IntToIntStreamFunction func) {
-        if (!TerminalUsed) {
+        if (!terminalUsed) {
             operations.add(func);
             return this;
         }
 
         ArrayList<Integer> result = new ArrayList<>();
         for (int item : stream) {
-            for (int sub_item : func.applyAsIntStream(item).toArray()) {
-                result.add(sub_item);
+            for (int subItem : func.applyAsIntStream(item).toArray()) {
+                result.add(subItem);
             }
         }
-        int final_res[] = new int[result.size()];
+        int[] finalRes = new int[result.size()];
         for (int i = 0; i < result.size(); i++) {
-            final_res[i] = result.get(i);
+            finalRes[i] = result.get(i);
         }
-        stream = final_res;
-        return of(final_res);
+        stream = finalRes;
+        return of(finalRes);
     }
 
     @Override
@@ -143,7 +149,9 @@ public class AsIntStream implements IntStream {
         for (int i = 0; i < count() - 1; i += 2) {
             res += op.apply(finale.toArray()[i], finale.toArray()[i + 1]);
         }
-        res = count() % 2 == 1 ? res + finale.toArray()[(int)finale.count() - 1] : res;
+        if (count() % 2 == 1) {
+            res += finale.toArray()[(int)finale.count() - 1];
+        }
         return res;
     }
 
@@ -152,18 +160,18 @@ public class AsIntStream implements IntStream {
         return run().stream;
     }
 
-    private AsIntStream run(){
-        TerminalUsed = true;
-        AsIntStream finale = this;
+    private AsIntStream run() {
+        terminalUsed = true;
+        finale = this;
         for (Object item : operations) {
             if (item instanceof IntPredicate) {
-                finale = (AsIntStream) this.filter( (IntPredicate) item);
+                finale = (AsIntStream) this.filter((IntPredicate) item);
             }
-            else if (item instanceof IntUnaryOperator){
-                finale = (AsIntStream) this.map( (IntUnaryOperator) item);
+            else if (item instanceof IntUnaryOperator) {
+                finale = (AsIntStream) this.map((IntUnaryOperator) item);
             }
-            else if (item instanceof IntToIntStreamFunction){
-                finale = (AsIntStream) this.flatMap( (IntToIntStreamFunction) item);
+            else if (item instanceof IntToIntStreamFunction) {
+                finale = (AsIntStream) this.flatMap((IntToIntStreamFunction) item);
             }
         }
         operations.clear();
