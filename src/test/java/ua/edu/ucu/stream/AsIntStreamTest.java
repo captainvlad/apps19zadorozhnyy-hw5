@@ -32,7 +32,7 @@ public class AsIntStreamTest {
 
     @Test(expected = IllegalArgumentException.class)
     public void min() {
-        example = AsIntStream.of(1, 2, 3, 4);
+        example = AsIntStream.of(4, 2, 3, 1);
         assertEquals(example.min().intValue(), 1);
         example_2.min();
     }
@@ -63,16 +63,16 @@ public class AsIntStreamTest {
     public void map() {
         example = AsIntStream.of(-4,-3, -2, -1, 0, 1, 2, 3, 4);
         IntStream result = example.map(x -> x * x);
-        assertEquals(example, result); // not changed object
+        assert (example.equals(result)); // not changed object
         assertArrayEquals(example.toArray(), new int[] {16, 9, 4, 1, 0, 1, 4, 9, 16});
         // changed after calling terminal method
     }
 
     @Test
     public void flatMap() {
-        example = AsIntStream.of(1, 4, 9);
-        IntStream result = example.flatMap(x -> AsIntStream.of(x - 1, x, x + 1));
-        assertEquals(example, result); // not changed object
+        AsIntStream example = (AsIntStream) AsIntStream.of(1, 4, 9);
+        AsIntStream result = (AsIntStream) example.flatMap(x -> AsIntStream.of(x - 1, x, x + 1));
+        assertArrayEquals(example.toArray(), result.toArray()); // not changed object
         assertArrayEquals(result.toArray(), new int[] {0, 1, 2, 3, 4, 5, 8, 9, 10});
         // changed after calling terminal method
     }

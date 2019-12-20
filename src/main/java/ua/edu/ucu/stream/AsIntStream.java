@@ -7,11 +7,12 @@ public class AsIntStream implements IntStream {
 
     private AsIntStream finale;
     private ArrayList<Object> operations = new ArrayList<>();
-    private boolean terminalUsed = false;
-    private int[] stream;
+    private static boolean terminalUsed = false;
+    public int[] stream;
 
     private AsIntStream(int... arg) {
         stream = arg;
+        finale = this;
     }
 
     public static IntStream of(int... values) {
@@ -117,8 +118,8 @@ public class AsIntStream implements IntStream {
         for (int i = 0; i < newStream.length; i++) {
             newStream[i] = mapper.apply(newStream[i]);
         }
-        stream = newStream;
-        return of(newStream);
+        finale.stream = newStream;
+        return finale;
     }
 
     @Override
@@ -129,7 +130,7 @@ public class AsIntStream implements IntStream {
         }
 
         ArrayList<Integer> result = new ArrayList<>();
-        for (int item : stream) {
+        for (int item : finale.stream) {
             for (int subItem : func.applyAsIntStream(item).toArray()) {
                 result.add(subItem);
             }
@@ -160,19 +161,17 @@ public class AsIntStream implements IntStream {
         return run().stream;
     }
 
-    private AsIntStream run() {
+    public AsIntStream run() {
         terminalUsed = true;
-        finale = this;
         for (Object item : operations) {
             if (item instanceof IntPredicate) {
-                finale = (AsIntStream) this.filter((IntPredicate) item);
+                finale.filter((IntPredicate) item);
             }
             else if (item instanceof IntUnaryOperator) {
-                finale = (AsIntStream) this.map((IntUnaryOperator) item);
+                finale.map((IntUnaryOperator) item);
             }
             else if (item instanceof IntToIntStreamFunction) {
-                finale = (AsIntStream)
-                        this.flatMap((IntToIntStreamFunction) item);
+                this.flatMap((IntToIntStreamFunction) item);
             }
         }
         operations.clear();
