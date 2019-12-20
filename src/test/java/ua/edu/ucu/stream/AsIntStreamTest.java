@@ -63,7 +63,7 @@ public class AsIntStreamTest {
     public void map() {
         example = AsIntStream.of(-4,-3, -2, -1, 0, 1, 2, 3, 4);
         IntStream result = example.map(x -> x * x);
-        assert (example.equals(result)); // not changed object
+        assertArrayEquals (example.toArray(), result.toArray()); // not changed object
         assertArrayEquals(example.toArray(), new int[] {16, 9, 4, 1, 0, 1, 4, 9, 16});
         // changed after calling terminal method
     }
