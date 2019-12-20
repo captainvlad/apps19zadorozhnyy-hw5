@@ -51,6 +51,15 @@ public class AsIntStreamTest {
     }
 
     @Test
+    public void filter() {
+        example = AsIntStream.of(-4,-3, -2, -1, 0, 1, 2, 3, 4);
+        IntStream result = example.filter(x -> x > 1);
+        assert(example.equals(result)); // not changed object
+        assertArrayEquals(result.toArray(), new int[] {2, 3, 4} );
+        // changed after calling terminal method
+    }
+
+    @Test
     public void map() {
         example = AsIntStream.of(-4,-3, -2, -1, 0, 1, 2, 3, 4);
         IntStream result = example.map(x -> x * x);
