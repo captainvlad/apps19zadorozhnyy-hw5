@@ -5,14 +5,14 @@ import java.util.ArrayList;
 
 public class AsIntStream implements IntStream {
 
-    private AsIntStream finale;
     private ArrayList<Object> operations = new ArrayList<>();
-    private static boolean terminalUsed = false;
+    private boolean terminalUsed = false;
     private int[] stream;
+    private int[] stream2;
 
     private AsIntStream(int... arg) {
         stream = arg;
-        finale = this;
+        stream2 = arg;
     }
 
     public static IntStream of(int... values) {
@@ -28,16 +28,19 @@ public class AsIntStream implements IntStream {
 
     @Override
     public Double average() {
-        finale = run();
-        return (double) finale.sum() / finale.count();
+        run();
+        double result = (double) sum() / count();
+        stream = stream2;
+        return result;
     }
 
     @Override
     public Integer max() {
         checkEmpty();
-        finale = run();
-        Integer max = finale.toArray()[0];
-        for (int item: finale.toArray()) {
+        run();
+        int[] items = toArray();
+        Integer max = items[0];
+        for (int item: items) {
             if (item > max) {
                 max = item;
             }
@@ -49,9 +52,10 @@ public class AsIntStream implements IntStream {
     public Integer min() {
         checkEmpty();
 
-        finale = run();
-        Integer min = finale.toArray()[0];
-        for (int item: finale.toArray()) {
+        run();
+        int[] items = toArray();
+        Integer min = items[0];
+        for (int item: items) {
             if (item < min) {
                 min = item;
             }
@@ -61,6 +65,7 @@ public class AsIntStream implements IntStream {
 
     @Override
     public long count() {
+
         return run().toArray().length;
     }
 
@@ -118,8 +123,8 @@ public class AsIntStream implements IntStream {
         for (int i = 0; i < newStream.length; i++) {
             newStream[i] = mapper.apply(newStream[i]);
         }
-        finale.stream = newStream;
-        return finale;
+        stream = newStream;
+        return this;
     }
 
     @Override
@@ -130,7 +135,7 @@ public class AsIntStream implements IntStream {
         }
 
         ArrayList<Integer> result = new ArrayList<>();
-        for (int item : finale.stream) {
+        for (int item : stream) {
             for (int subItem : func.applyAsIntStream(item).toArray()) {
                 result.add(subItem);
             }
@@ -145,13 +150,13 @@ public class AsIntStream implements IntStream {
 
     @Override
     public int reduce(int identity, IntBinaryOperator op) {
-        finale = run();
+        run();
         int res = identity;
         for (int i = 0; i < count() - 1; i += 2) {
-            res += op.apply(finale.toArray()[i], finale.toArray()[i + 1]);
+            res += op.apply(toArray()[i], toArray()[i + 1]);
         }
         if (count() % 2 == 1) {
-            res += finale.toArray()[(int) finale.count() - 1];
+            res += toArray()[(int) count() - 1];
         }
         return res;
     }
@@ -165,16 +170,16 @@ public class AsIntStream implements IntStream {
         terminalUsed = true;
         for (Object item : operations) {
             if (item instanceof IntPredicate) {
-                finale.filter((IntPredicate) item);
+                filter((IntPredicate) item);
             }
             else if (item instanceof IntUnaryOperator) {
-                finale.map((IntUnaryOperator) item);
+                map((IntUnaryOperator) item);
             }
             else if (item instanceof IntToIntStreamFunction) {
-                this.flatMap((IntToIntStreamFunction) item);
+                flatMap((IntToIntStreamFunction) item);
             }
         }
         operations.clear();
-        return finale;
+        return this;
     }
 }
