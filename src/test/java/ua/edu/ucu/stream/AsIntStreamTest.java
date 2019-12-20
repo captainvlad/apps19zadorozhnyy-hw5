@@ -50,14 +50,14 @@ public class AsIntStreamTest {
         example_2.sum();
     }
 
-    @Test
-    public void filter() {
-        example = AsIntStream.of(-4,-3, -2, -1, 0, 1, 2, 3, 4);
-        IntStream result = example.filter(x -> x > 1);
-        assertArrayEquals(example.toArray(), result.toArray()); // not changed object
-        assertArrayEquals(result.toArray(), new int[] {2, 3, 4} );
-        // changed after calling terminal method
-    }
+//    @Test
+//    public void filter() {
+//        example = AsIntStream.of(-4,-3, -2, -1, 0, 1, 2, 3, 4);
+//        IntStream result = example.filter(x -> x > 1);
+//        assertArrayEquals(example.toArray(), result.toArray()); // not changed object
+//        assertArrayEquals(result.toArray(), new int[] {2, 3, 4} );
+//        // changed after calling terminal method
+//    }
 
     @Test
     public void map() {
