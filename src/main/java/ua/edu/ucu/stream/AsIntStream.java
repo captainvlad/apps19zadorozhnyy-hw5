@@ -51,7 +51,7 @@ public class AsIntStream implements IntStream {
         finale = run();
         Integer min = finale.toArray()[0];
         for (int item: finale.toArray()) {
-            if(item < min) {
+            if (item < min) {
                 min = item;
             }
         }
@@ -109,7 +109,7 @@ public class AsIntStream implements IntStream {
 
     @Override
     public IntStream map(IntUnaryOperator mapper) {
-        if(!terminalUsed) {
+        if (!terminalUsed) {
             operations.add(mapper);
             return this;
         }
@@ -150,7 +150,7 @@ public class AsIntStream implements IntStream {
             res += op.apply(finale.toArray()[i], finale.toArray()[i + 1]);
         }
         if (count() % 2 == 1) {
-            res += finale.toArray()[(int)finale.count() - 1];
+            res += finale.toArray()[(int) finale.count() - 1];
         }
         return res;
     }
@@ -171,7 +171,8 @@ public class AsIntStream implements IntStream {
                 finale = (AsIntStream) this.map((IntUnaryOperator) item);
             }
             else if (item instanceof IntToIntStreamFunction) {
-                finale = (AsIntStream) this.flatMap((IntToIntStreamFunction) item);
+                finale = (AsIntStream)
+                        this.flatMap((IntToIntStreamFunction) item);
             }
         }
         operations.clear();
