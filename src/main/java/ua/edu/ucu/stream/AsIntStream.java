@@ -66,7 +66,9 @@ public class AsIntStream implements IntStream {
     @Override
     public long count() {
 
-        return run().toArray().length;
+        long result = run().toArray().length;
+        stream = stream2;
+        return result;
     }
 
     @Override
@@ -77,7 +79,7 @@ public class AsIntStream implements IntStream {
         for (int item: run().stream) {
             sum += item;
         }
-
+        stream = stream2;
         return sum;
     }
 
@@ -158,12 +160,15 @@ public class AsIntStream implements IntStream {
         if (count() % 2 == 1) {
             res += toArray()[(int) count() - 1];
         }
+        stream = stream2;
         return res;
     }
 
     @Override
     public int[] toArray() {
-        return run().stream;
+        int[] result = run().stream;
+        stream = stream2;
+        return result;
     }
 
     private AsIntStream run() {
