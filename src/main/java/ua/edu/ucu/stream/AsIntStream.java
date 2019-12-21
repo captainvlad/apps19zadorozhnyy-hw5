@@ -5,14 +5,14 @@ import java.util.ArrayList;
 
 public class AsIntStream implements IntStream {
 
+    private AsIntStream finale;
     private ArrayList<Object> operations = new ArrayList<>();
     private boolean terminalUsed = false;
     private int[] stream;
-    private int[] stream2;
 
     private AsIntStream(int... arg) {
         stream = arg;
-        stream2 = arg;
+        finale = this;
     }
 
     public static IntStream of(int... values) {
@@ -28,59 +28,31 @@ public class AsIntStream implements IntStream {
 
     @Override
     public Double average() {
-        run();
-        double result = (double) sum() / count();
-        stream = stream2;
-        return result;
+        finale = run();
+        return (double) finale.sum() / finale.count();
     }
 
     @Override
     public Integer max() {
         checkEmpty();
-        run();
-        int[] items = toArray();
-        Integer max = items[0];
-        for (int item: items) {
-            if (item > max) {
-                max = item;
-            }
-        }
-        return max;
+        return run().reduce(Integer.MIN_VALUE, (sum, x) -> sum = Math.max(x, sum));
     }
 
     @Override
     public Integer min() {
         checkEmpty();
-
-        run();
-        int[] items = toArray();
-        Integer min = items[0];
-        for (int item: items) {
-            if (item < min) {
-                min = item;
-            }
-        }
-        return min;
+        return run().reduce(Integer.MAX_VALUE, (sum, x) -> sum = Math.min(x, sum));
     }
 
     @Override
     public long count() {
-
-        long result = run().toArray().length;
-        stream = stream2;
-        return result;
+        return run().toArray().length;
     }
 
     @Override
     public Integer sum() {
         checkEmpty();
-        Integer sum = 0;
-
-        for (int item: run().stream) {
-            sum += item;
-        }
-        stream = stream2;
-        return sum;
+        return run().reduce(0, (sum, x) -> sum += x);
     }
 
     @Override
@@ -125,8 +97,8 @@ public class AsIntStream implements IntStream {
         for (int i = 0; i < newStream.length; i++) {
             newStream[i] = mapper.apply(newStream[i]);
         }
-        stream = newStream;
-        return this;
+        finale.stream = newStream;
+        return finale;
     }
 
     @Override
@@ -137,7 +109,7 @@ public class AsIntStream implements IntStream {
         }
 
         ArrayList<Integer> result = new ArrayList<>();
-        for (int item : stream) {
+        for (int item : finale.stream) {
             for (int subItem : func.applyAsIntStream(item).toArray()) {
                 result.add(subItem);
             }
@@ -152,39 +124,33 @@ public class AsIntStream implements IntStream {
 
     @Override
     public int reduce(int identity, IntBinaryOperator op) {
-        run();
-        int res = identity;
-        for (int i = 0; i < count() - 1; i += 2) {
-            res += op.apply(toArray()[i], toArray()[i + 1]);
+        finale = run();
+        int result = identity;
+        for (int i: finale.toArray()) {
+            result = op.apply(result, i);
         }
-        if (count() % 2 == 1) {
-            res += toArray()[(int) count() - 1];
-        }
-        stream = stream2;
-        return res;
+        return result;
     }
 
     @Override
     public int[] toArray() {
-        int[] result = run().stream;
-        stream = stream2;
-        return result;
+        return run().stream;
     }
 
     private AsIntStream run() {
-        terminalUsed = true;
+        finale.terminalUsed = true;
         for (Object item : operations) {
             if (item instanceof IntPredicate) {
-                filter((IntPredicate) item);
+                finale.filter((IntPredicate) item);
             }
             else if (item instanceof IntUnaryOperator) {
-                map((IntUnaryOperator) item);
+                finale.map((IntUnaryOperator) item);
             }
             else if (item instanceof IntToIntStreamFunction) {
-                flatMap((IntToIntStreamFunction) item);
+                finale.flatMap((IntToIntStreamFunction) item);
             }
         }
         operations.clear();
-        return this;
+        return finale;
     }
 }
