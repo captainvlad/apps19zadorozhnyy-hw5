@@ -32,9 +32,11 @@ public class FilterIterator implements Iterator {
 
     @Override
     public Object next() {
-        if (!hasNext()) {
+        try {
+            return nextValue;
+        }
+        catch (Exception e){
             throw new NoSuchElementException("No values left!");
         }
-        return nextValue;
     }
 }
