@@ -14,23 +14,22 @@ public class AsIntStream implements IntStream {
     private int size;
     private boolean terminalUsed = false;
 
+    private AsIntStream(int... values) {
+        iterator = new BasicIterator(values);
+        size = values.length;
+    }
 
-    private void checkUsed(){
-        if (terminalUsed){
+    private void checkUsed() {
+        if (terminalUsed) {
             throw new IllegalArgumentException("Stream is closed");
         }
         terminalUsed = true;
     }
 
-    private void checkEmpty(int len){
-        if (len == 0){
+    private void checkEmpty(int len) {
+        if (len == 0) {
             throw new IllegalArgumentException("Empty stream");
         }
-    }
-
-    private AsIntStream(int... values){
-        iterator = new BasicIterator(values);
-        size = values.length;
     }
 
     public static IntStream of(int... values) {
@@ -42,7 +41,7 @@ public class AsIntStream implements IntStream {
         checkUsed();
         int sum = 0;
         int len = 0;
-        while (iterator.hasNext()){
+        while (iterator.hasNext()) {
             sum += (Integer) iterator.next();
             len += 1;
         }
@@ -73,7 +72,7 @@ public class AsIntStream implements IntStream {
         checkUsed();
         int amount = 0;
         int summ = 0;
-        while (iterator.hasNext()){
+        while (iterator.hasNext()) {
             summ += (Integer) iterator.next();
             amount += 1;
         }
@@ -90,7 +89,7 @@ public class AsIntStream implements IntStream {
 
     @Override
     public void forEach(IntConsumer action) {
-        while (iterator.hasNext()){
+        while (iterator.hasNext()) {
             action.accept((Integer) iterator.next());
         }
     }
@@ -114,7 +113,7 @@ public class AsIntStream implements IntStream {
         checkUsed();
         int res = identity;
         int amount = 0;
-        while (iterator.hasNext()){
+        while (iterator.hasNext()) {
             res = op.apply(res, (Integer) iterator.next());
             amount += 1;
         }
@@ -127,7 +126,7 @@ public class AsIntStream implements IntStream {
     public int[] toArray() {
         checkUsed();
         ArrayList result = new ArrayList();
-        while (iterator.hasNext()){
+        while (iterator.hasNext()) {
             result.add(iterator.next());
         }
         int[] resultFinal = new int[result.size()];

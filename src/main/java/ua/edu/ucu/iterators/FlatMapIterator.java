@@ -21,7 +21,8 @@ public class FlatMapIterator implements Iterator {
     @Override
     public Integer next() {
         if (!current.hasNext()) {
-            current = new BasicIterator(action.applyAsIntStream((Integer) previous.next()).toArray());
+            current = new BasicIterator(action.applyAsIntStream(
+                    (Integer) previous.next()).toArray());
         }
         return (Integer) current.next();
     }

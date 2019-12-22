@@ -6,7 +6,7 @@ public class MapIterator implements Iterator {
     private IntUnaryOperator operator;
     private Iterator argument;
 
-    public MapIterator(Iterator argument, IntUnaryOperator operator){
+    public MapIterator(Iterator argument, IntUnaryOperator operator) {
         this.argument = argument;
         this.operator = operator;
     }
