@@ -1,156 +1,139 @@
 package ua.edu.ucu.stream;
 
 import ua.edu.ucu.function.*;
+import ua.edu.ucu.iterators.BasicIterator;
+import ua.edu.ucu.iterators.FilterIterator;
+import ua.edu.ucu.iterators.FlatMapIterator;
+import ua.edu.ucu.iterators.MapIterator;
+
 import java.util.ArrayList;
+import java.util.Iterator;
 
 public class AsIntStream implements IntStream {
-
-    private AsIntStream finale;
-    private ArrayList<Object> operations = new ArrayList<>();
+    private Iterator iterator;
+    private int size;
     private boolean terminalUsed = false;
-    private int[] stream;
 
-    private AsIntStream(int... arg) {
-        stream = arg;
-        finale = this;
+
+    private void checkUsed(){
+        if (terminalUsed){
+            throw new IllegalArgumentException("Stream is closed");
+        }
+        terminalUsed = true;
     }
 
-    public static IntStream of(int... values) {
-
-        return new AsIntStream(values);
-    }
-
-    private void checkEmpty() {
-        if (count() == 0) {
+    private void checkEmpty(int len){
+        if (len == 0){
             throw new IllegalArgumentException("Empty stream");
         }
     }
 
+    private AsIntStream(int... values){
+        iterator = new BasicIterator(values);
+        size = values.length;
+    }
+
+    public static IntStream of(int... values) {
+        return new AsIntStream(values);
+    }
+
     @Override
     public Double average() {
-        finale = run();
-        return (double) finale.sum() / finale.count();
+        checkUsed();
+        int sum = 0;
+        int len = 0;
+        while (iterator.hasNext()){
+            sum += (Integer) iterator.next();
+            len += 1;
+        }
+        checkEmpty(len);
+        return (double) sum / len;
     }
 
     @Override
     public Integer max() {
-        checkEmpty();
-        return run().reduce(Integer.MIN_VALUE, (sum, x) -> sum = Math.max(x, sum));
+        checkUsed();
+        return reduce(Integer.MIN_VALUE, (sum, x) -> sum = Math.max(x, sum));
     }
 
     @Override
     public Integer min() {
-        checkEmpty();
-        return run().reduce(Integer.MAX_VALUE, (sum, x) -> sum = Math.min(x, sum));
+        checkUsed();
+        return reduce(Integer.MAX_VALUE, (sum, x) -> sum = Math.min(x, sum));
     }
 
     @Override
     public long count() {
-        return run().toArray().length;
+        checkUsed();
+        return toArray().length;
     }
 
     @Override
     public Integer sum() {
-        checkEmpty();
-        return run().reduce(0, (sum, x) -> sum += x);
+        checkUsed();
+        int amount = 0;
+        int summ = 0;
+        while (iterator.hasNext()){
+            summ += (Integer) iterator.next();
+            amount += 1;
+        }
+        checkEmpty(amount);
+        return summ;
     }
 
     @Override
     public IntStream filter(IntPredicate predicate) {
-        if (!terminalUsed) {
-            operations.add(predicate);
-            return this;
-        }
-        int k = 0;
-        int p = 0;
-        for (int item: stream) {
-            if (predicate.test(item)) {
-                k += 1;
-            }
-        }
-        int[] result = new int[k];
-
-        for (int item: stream) {
-            if (predicate.test(item)) {
-                result[p] = item;
-                p += 1;
-            }
-        }
-        stream = result;
-        return of(result);
+        AsIntStream result = (AsIntStream) of(new int[size]);
+        result.iterator = new FilterIterator(iterator, predicate);
+        return result;
     }
 
     @Override
     public void forEach(IntConsumer action) {
-        for (int item: run().stream) {
-            action.accept(item);
+        while (iterator.hasNext()){
+            action.accept((Integer) iterator.next());
         }
     }
 
     @Override
     public IntStream map(IntUnaryOperator mapper) {
-        if (!terminalUsed) {
-            operations.add(mapper);
-            return this;
-        }
-        int[] newStream = stream.clone();
-        for (int i = 0; i < newStream.length; i++) {
-            newStream[i] = mapper.apply(newStream[i]);
-        }
-        finale.stream = newStream;
-        return finale;
-    }
-
-    @Override
-    public IntStream flatMap(IntToIntStreamFunction func) {
-        if (!terminalUsed) {
-            operations.add(func);
-            return this;
-        }
-
-        ArrayList<Integer> result = new ArrayList<>();
-        for (int item : finale.stream) {
-            for (int subItem : func.applyAsIntStream(item).toArray()) {
-                result.add(subItem);
-            }
-        }
-        int[] finalRes = new int[result.size()];
-        for (int i = 0; i < result.size(); i++) {
-            finalRes[i] = result.get(i);
-        }
-        stream = finalRes;
-        return of(finalRes);
-    }
-
-    @Override
-    public int reduce(int identity, IntBinaryOperator op) {
-        finale = run();
-        int result = identity;
-        for (int i: finale.toArray()) {
-            result = op.apply(result, i);
-        }
+        AsIntStream result = (AsIntStream) of(new int[size]);
+        result.iterator = new MapIterator(iterator, mapper);
         return result;
     }
 
     @Override
-    public int[] toArray() {
-        return run().stream;
+    public IntStream flatMap(IntToIntStreamFunction func) {
+        AsIntStream result = (AsIntStream) of(new int[size]);
+        result.iterator = new FlatMapIterator(iterator, func);
+        return result;
     }
 
-    private AsIntStream run() {
-        finale.terminalUsed = true;
-        for (Object item : operations) {
-            if (item instanceof IntPredicate) {
-                finale.filter((IntPredicate) item);
-            }
-            else if (item instanceof IntUnaryOperator) {
-                finale.map((IntUnaryOperator) item);
-            }
-            else if (item instanceof IntToIntStreamFunction) {
-                finale.flatMap((IntToIntStreamFunction) item);
-            }
+    @Override
+    public int reduce(int identity, IntBinaryOperator op) {
+        checkUsed();
+        int res = identity;
+        int amount = 0;
+        while (iterator.hasNext()){
+            res = op.apply(res, (Integer) iterator.next());
+            amount += 1;
         }
-        operations.clear();
-        return finale;
+        checkEmpty(amount);
+
+        return res;
+    }
+
+    @Override
+    public int[] toArray() {
+        checkUsed();
+        ArrayList result = new ArrayList();
+        while (iterator.hasNext()){
+            result.add(iterator.next());
+        }
+        int[] resultFinal = new int[result.size()];
+        for (int i = 0; i < resultFinal.length; i++) {
+            resultFinal[i] = (int) result.get(i);
+        }
+        return resultFinal;
     }
 }

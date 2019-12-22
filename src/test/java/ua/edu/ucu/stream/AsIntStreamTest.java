@@ -1,91 +1,84 @@
 package ua.edu.ucu.stream;
 
-import org.junit.Assert;
 import org.junit.Test;
 
 import static org.junit.Assert.*;
 
 public class AsIntStreamTest {
-    private IntStream example;
-    private IntStream example_2 = AsIntStream.of();
+    private IntStream intStream = AsIntStream.of(-1, 0, 1, 2, 3);;
 
     @Test
     public void of() {
-        example = AsIntStream.of(1, 2, 3, 4);
-        IntStream example_2 = AsIntStream.of();
-        assert (example instanceof AsIntStream);
+        intStream = AsIntStream.of(-1, 0, 1, 2, 3);
+        assertArrayEquals(intStream.toArray(), new int[]{-1, 0, 1, 2, 3});
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void Empty(){
+        AsIntStream intStrea = (AsIntStream) AsIntStream.of();
+        intStrea.reduce(0, (sum, x) -> sum += x);
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void average() {
-        example = AsIntStream.of(1, 2, 3, 4);
-        assertEquals(example.average(), 2.5, 0.1);
-        example_2.average();
+        Double avg = intStream.average();
+        intStream.average();
+        assertEquals(avg, 1, 0.1);
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void max() {
-        example = AsIntStream.of(1, 2, 3, 4);
-        assertEquals(example.max().intValue(), 4);
-        example_2.max();
+        intStream = AsIntStream.of(-1, 0, 1, 2, 3);
+        assertEquals(intStream.max(), 3, 0.1);
+        intStream.max();
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void min() {
-        example = AsIntStream.of(4, 2, 3, 1);
-        assertEquals(example.min().intValue(), 1);
-        example_2.min();
+        assertEquals(intStream.min(), -1, 0.1);
+        intStream.min();
     }
 
-    @Test
+    @Test(expected = IllegalArgumentException.class)
     public void count() {
-        example = AsIntStream.of(1, 2, 3, 4);
-        assertEquals(example.count(), 4);
+        assertEquals(intStream.count(), 5, 0.1);
+        intStream.count();
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void sum() {
-        example = AsIntStream.of(1, 2, 3, 4);
-        assertEquals(example.sum().intValue(), 10);
-        example_2.sum();
+        assertEquals(intStream.sum(), 5, 0.1);
+        intStream.sum();
     }
 
     @Test
     public void filter() {
-        example = AsIntStream.of(-4,-3, -2, -1, 0, 1, 2, 3, 4);
-        IntStream result = example.filter(x -> x > 1);
-        assertArrayEquals(result.toArray(), new int[] {2, 3, 4} );
-        // changed after calling terminal method
+        assertArrayEquals(new int[] {1, 2, 3}, intStream.filter(x -> x > 0).toArray());
     }
 
     @Test
     public void map() {
-        example = AsIntStream.of(-4,-3, -2, -1, 0, 1, 2, 3, 4);
-        IntStream result = example.map(x -> x * x);
-        assertArrayEquals (example.toArray(), result.toArray()); // not changed object
-        assertArrayEquals(example.toArray(), new int[] {16, 9, 4, 1, 0, 1, 4, 9, 16});
-        // changed after calling terminal method
+        assertArrayEquals(new int[] {1, 0, 1, 4, 9}, intStream.map(x -> x * x).toArray());
     }
 
     @Test
     public void flatMap() {
-        AsIntStream example = (AsIntStream) AsIntStream.of(1, 4, 9);
-        AsIntStream result = (AsIntStream) example.flatMap(x -> AsIntStream.of(x - 1, x, x + 1));
-        assertArrayEquals(example.toArray(), result.toArray()); // not changed object
-        assertArrayEquals(result.toArray(), new int[] {0, 1, 2, 3, 4, 5, 8, 9, 10});
-        // changed after calling terminal method
+        int res[] = intStream
+                .filter(x -> x > 0) // 1, 2, 3
+                .map(x -> x * x) // 1, 4, 9
+                .flatMap(x -> AsIntStream.of(x - 1, x, x + 1)).toArray();
+        assertArrayEquals(res, new int[]{0, 1, 2, 3, 4, 5, 8, 9, 10});
     }
 
-    @Test
+    @Test(expected = IllegalArgumentException.class)
     public void reduce() {
-        example = AsIntStream.of(0, 1, 2, 3, 4, 5, 8, 9, 10);
-        int result = example.reduce(0, (sum, x) -> sum += x);
-        assertEquals(result, 42);
+        assertEquals(intStream.reduce(0, (sum, x) -> sum += x), 5);
+        intStream.reduce(0, (sum, x) -> sum += x);
     }
 
-    @Test
+    @Test(expected = IllegalArgumentException.class)
     public void toArray() {
-        example = AsIntStream.of(0, 1, 2, 3, 4, 5, 8, 9, 10);
-        assertArrayEquals(example.toArray(), new int[] {0, 1, 2, 3, 4, 5, 8, 9, 10});
+        assertArrayEquals(intStream.toArray(), new int[]{-1, 0, 1, 2, 3});
+        intStream.toArray();
     }
 }
